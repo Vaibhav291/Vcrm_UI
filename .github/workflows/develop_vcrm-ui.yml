@@ -47,7 +47,7 @@ jobs:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           action: 'upload'
           app_location: 'vcrm-ui'
-          output_location: 'dist'
+          output_location: 'vcrm-ui/dist'
           skip_app_build: true
 
       - name: Send Cliq notification
