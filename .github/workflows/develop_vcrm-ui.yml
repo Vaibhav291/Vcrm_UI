@@ -1,0 +1,75 @@
+# Docs for the Azure Static Web Apps Deploy action: https://github.com/Azure/static-web-apps-deploy
+
+name: Build and deploy Vite app to Azure Static Web Apps - Vcrm-ui
+
+on:
+  push:
+    branches:
+      - develop
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
+    branches:
+      - develop
+  workflow_dispatch:
+
+jobs:
+  build_and_deploy:
+    if: github.event_name != 'pull_request' || github.event.action != 'closed'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    defaults:
+      run:
+        working-directory: vcrm-ui
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.x'
+          cache: 'npm'
+          cache-dependency-path: vcrm-ui/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build (Development)
+        run: npm run build:development
+
+      - name: Deploy to Azure Static Web Apps
+        id: deploy
+        uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          action: 'upload'
+          app_location: 'vcrm-ui'
+          output_location: 'dist'
+          skip_app_build: true
+
+      - name: Send Cliq notification
+        if: always() && github.event_name != 'pull_request'
+        shell: pwsh
+        env:
+          WEBHOOK_URL: ${{ secrets.CLIQ_WEBHOOK_URL }}
+          DEPLOY_RESULT: ${{ job.status }}
+        run: |
+          $status = if ($env:DEPLOY_RESULT -eq "success") { "Success" } else { "Failure" }
+          $deploymentTime = (Get-Date).ToUniversalTime().ToString("yyyy-MM-dd hh:mm:ss tt") + " UTC"
+          $message = "Application :- Vcrm UI`nDeployment Status : $status`nDeployment Time : $deploymentTime"
+          $body = @{ text = $message } | ConvertTo-Json
+          Invoke-RestMethod -Uri $env:WEBHOOK_URL -Method Post -Body $body -ContentType "application/json"
+
+  close_pull_request:
+    if: github.event_name == 'pull_request' && github.event.action == 'closed'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Close Pull Request
+        id: closepullrequest
+        uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
+          action: 'close'
