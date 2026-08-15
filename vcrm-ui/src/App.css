@@ -221,13 +221,3 @@
   color: var(--text);
   margin: 12px 0;
 }
-
-.verify-inline {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-
-  input {
-    flex: 1;
-  }
-}

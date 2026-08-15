@@ -10,25 +10,21 @@ interface LoginPageProps {
 }
 
 export function LoginPage({ onSwitchToSignUp, onNeedVerification }: LoginPageProps) {
-  const [username, setUsername] = useState('')
+  const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [needsVerification, setNeedsVerification] = useState(false)
-  const [verifyEmail, setVerifyEmail] = useState('')
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
     setSubmitting(true)
     setError(null)
-    setNeedsVerification(false)
     try {
-      const auth = await authApi.login({ username, password })
+      const auth = await authApi.login({ email, password })
       setSession(auth)
     } catch (err) {
       if (err instanceof ApiError && err.status === 403) {
-        setNeedsVerification(true)
-        setError('Email not verified. Enter your email below to verify it.')
+        onNeedVerification(email)
       } else {
         setError(describeAuthError(err))
       }
@@ -42,11 +38,12 @@ export function LoginPage({ onSwitchToSignUp, onNeedVerification }: LoginPagePro
       <h2>Log in</h2>
 
       <label>
-        Username
+        Email
         <input
           required
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
         />
       </label>
       <label>
@@ -60,23 +57,6 @@ export function LoginPage({ onSwitchToSignUp, onNeedVerification }: LoginPagePro
       </label>
 
       {error && <p className="form-error">{error}</p>}
-
-      {needsVerification && (
-        <div className="verify-inline">
-          <input
-            placeholder="you@example.com"
-            value={verifyEmail}
-            onChange={(e) => setVerifyEmail(e.target.value)}
-          />
-          <button
-            type="button"
-            className="btn-link"
-            onClick={() => verifyEmail && onNeedVerification(verifyEmail)}
-          >
-            Verify email
-          </button>
-        </div>
-      )}
 
       <div className="form-actions">
         <button type="submit" className="btn-primary" disabled={submitting}>
@@ -96,7 +76,7 @@ export function LoginPage({ onSwitchToSignUp, onNeedVerification }: LoginPagePro
 
 function describeAuthError(err: unknown): string {
   if (err instanceof ApiError) {
-    if (err.status === 401) return 'Invalid username or password.'
+    if (err.status === 401) return 'Invalid email or password.'
     return err.message || `Request failed (${err.status})`
   }
   return err instanceof Error ? err.message : 'Unable to reach the API'
