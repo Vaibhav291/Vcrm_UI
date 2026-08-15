@@ -3,10 +3,13 @@ import { customersApi } from '../../api/customers'
 import { ApiError } from '../../api/client'
 import type { Customer, CustomerInput } from '../../types/customer'
 import { CustomerForm } from './CustomerForm'
+import { useSession } from '../../auth/useSession'
+import { clearSession } from '../../auth/session'
 
 type Mode = { kind: 'list' } | { kind: 'create' } | { kind: 'edit'; customer: Customer }
 
 export function CustomersPage() {
+  const session = useSession()
   const [customers, setCustomers] = useState<Customer[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -80,9 +83,15 @@ export function CustomersPage() {
     <div className="customers-page">
       <div className="page-header">
         <h1>Customers</h1>
-        <button className="btn-primary" onClick={() => setMode({ kind: 'create' })}>
-          Add Customer
-        </button>
+        <div className="header-actions">
+          {session && <span className="signed-in-as">Signed in as {session.username}</span>}
+          <button className="btn-primary" onClick={() => setMode({ kind: 'create' })}>
+            Add Customer
+          </button>
+          <button className="btn-secondary" onClick={clearSession}>
+            Log out
+          </button>
+        </div>
       </div>
 
       {error && (
