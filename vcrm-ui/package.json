@@ -9,6 +9,7 @@
     "dev:staging": "vite --mode Staging",
     "dev:qa": "vite --mode QA",
     "build": "tsc -b && vite build --mode Production",
+    "build:development": "tsc -b && vite build --mode Development",
     "build:staging": "tsc -b && vite build --mode Staging",
     "build:qa": "tsc -b && vite build --mode QA",
     "lint": "eslint .",
