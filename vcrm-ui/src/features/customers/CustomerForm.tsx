@@ -20,7 +20,7 @@ interface CustomerFormProps {
   onCancel: () => void
 }
 
-function toFormState(customer: Customer | null): CustomerInput {
+function toFormState(customer: Customer | null ): CustomerInput {
   if (!customer) return emptyForm
   const { customerId: _customerId, createdAt: _createdAt, updatedAt: _updatedAt, ...rest } = customer
   return rest
